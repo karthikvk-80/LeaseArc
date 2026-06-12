@@ -1,0 +1,46 @@
+# Python environments and caches
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local credentials and environment configuration
+.env
+.env.*
+!.env.example
+config.py
+config.json
+
+# Generated pipeline artifacts
+outputs/
+Data/
+enam_concatenated_profiler_result_v2_attribute_info.json
+expected_merged_profiler_output.json
+
+# Local lease documents and working files
+docs/
+Lightbridge/
+*.pdf
+*.doc
+*.docx
+
+# Editor, OS, and temporary files
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+~$*
+.~lock.*
+
+# Build and packaging artifacts
+build/
+dist/
+*.egg-info/
