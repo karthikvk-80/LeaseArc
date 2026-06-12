@@ -17,6 +17,8 @@ import tempfile
 import threading
 import time
 from urllib.parse import unquote, urlparse
+from src.attributes import REFERENCE_HINTS
+from src.page_splitter import markdown_pages
 from src.mongo_persistence import (
     configured_lease_id,
     new_lease_id,
@@ -130,18 +132,8 @@ PROFILER_PARAMETER_CONFIG = (
     PARAMETER_CONFIG.get("profiler_model", {}) if isinstance(PARAMETER_CONFIG.get("profiler_model"), dict) else {}
 )
 IMAGE_PDF_MAX_PAGES = int(PROFILER_PARAMETER_CONFIG.get("image_pdf_max_pages", 15))
-SECTION_SPAN_BUFFER_PAGES = int(PROFILER_PARAMETER_CONFIG.get("section_span_buffer_pages", 1))
 ATTRIBUTE_INFO_RETRY_ATTEMPTS = int(PROFILER_PARAMETER_CONFIG.get("attribute_info_retry_attempts", 3))
-ATTRIBUTE_INFO_BATCH_SIZE = int(PROFILER_PARAMETER_CONFIG.get("attribute_info_batch_size", 5))
 ATTRIBUTE_INFO_MAX_WORKERS = int(PROFILER_PARAMETER_CONFIG.get("attribute_info_max_workers", 5))
-REPEATABLE_ATTRIBUTE_COUNT_KEYS = {
-    "Area": "area_count",
-    "Expenses": "expenses_count",
-    "Allowance": "allowance_count",
-    "Security Deposit": "security_deposit_count",
-    "Options": "options_count",
-}
-
 LEASE_ATTRIBUTE_LIST = [
     "Property name",
     "Street",
@@ -202,6 +194,126 @@ LEASE_ATTRIBUTE_LIST = [
     "Security Deposit",
     "Options",
 ]
+
+LEASE_ATTRIBUTE_PREFIX = "Lease_catalyst.Lease_Abstraction."
+ATTRIBUTE_CATEGORIES: dict[str, list[str]] = {
+    "Core Lease Terms": [
+        "Property name", "Street", "Street no", "Postal code", "City", "County",
+        "State / province", "Country", "Building Type", "Total building area", "UOM",
+    ],
+    "Parties": [
+        "Landlord Name", "Tenant Name",
+        "Contact Identification.0.Contact Type", "Contact Identification.0.Name",
+        "Contact Identification.0.Attention", "Contact Identification.0.Care of",
+        "Contact Identification.0.DBA", "Contact Identification.0.Street no.",
+        "Contact Identification.0.Street", "Contact Identification.0.Suite",
+        "Contact Identification.0.P.O. Box", "Contact Identification.0.Zip code",
+        "Contact Identification.0.City", "Contact Identification.0.State / Province",
+        "Contact Identification.0.Country",
+        "Contact Identification.0.Additional address details",
+        "Contact Identification.0.Phone", "Contact Identification.0.Mobile",
+        "Contact Identification.0.Fax", "Contact Identification.0.Email",
+    ],
+    "Critical Dates": [
+        "Effective Date", "Execution Date", "Original Commencement Date",
+        "Rent Commencement Date", "Current Commencement Date",
+        "Current Expiration Date", "Original Expiration Date", "Possession Date",
+        "Delivery Date", "Term Duration",
+    ],
+    "Restrictive Clauses": [
+        "Lease Status", "Default", "Estoppel", "Business Hours", "Late Charges",
+        "Repair and Maintenance", "Insurance Requirements", "Parking", "Signage",
+        "Surrender", "Holdover", "Permitted Use", "Assignment/Sublet",
+        "Alterations", "Operating Expenses", "RE Taxes", "Property Insurance",
+        "Restricted Uses", "Prohibited Uses", "Exclusive Use",
+        "Percentage Rent (Payment)", "Gross Sales (Reporting)", "Go dark",
+        "Co-Tenancy", "Radius Restrictions", "Tenant Improvement Allowance",
+        "Brokers", "Notices", "Base Rent Comments", "Utilities",
+    ],
+    "Expenses": [
+        "Expenses", "Expenses.0.Rent Type", "Expenses.0.Start date",
+        "Expenses.0.End date", "Expenses.0.Monthly Amount",
+        "Expenses.0.Monthly Amount per SF", "Expenses.0.Annual Amount",
+        "Expenses.0.Annual amount per SF", "Expenses.0.Currency",
+        "Expenses.0.On Day", "Expenses.0.Payment Frequency",
+    ],
+    "Allowance": [
+        "Allowance", "Allowance.0.Allowance Type", "Allowance.0.Allowance Amount",
+        "Allowance.0.Payment Deadline", "Allowance.0.Allowance Comments",
+    ],
+    "Security Deposit": [
+        "Security Deposit", "Security Deposit.0.Security Deposit Type",
+        "Security Deposit.0.Security Deposit Amount",
+        "Security Deposit.0.Security Deposit Currency",
+        "Security Deposit.0.Payment Date", "Security Deposit.0.Return Due Date",
+        "Security Deposit.0.Security Deposit Comments",
+    ],
+    "Options": [
+        "Options", "Options.0.Option type", "Options.0.Option status",
+        "Options.0.Option Effective Date", "Options.0.Option End Date",
+        "Options.0.Option Earliest Notice",
+        "Options.0.Option Latest Notice Deadline", "Options.0.Options Comments",
+    ],
+    "Area": [
+        "Area", "Area.0.Unit/suite number", "Area.0.Type", "Area.0.Gross area",
+        "Area.0.Gross Area UOM", "Area.0.Net area", "Area.0.Net Area UOM",
+        "Area.0.Floor no.", "Area.0.Start date", "Area.0.End date",
+        "Area.0.Duration",
+    ],
+}
+
+ATTRIBUTE_DEFINITION_OVERRIDES = {
+    "Contact Identification": "Contact details or an address block for a lease party.",
+    "Expenses": "Rent, recurring charge, or expense schedule information.",
+    "Allowance": "Allowance, contribution, concession, or reimbursement information.",
+    "Security Deposit": "Security deposit, bank guarantee, letter of credit, or similar lease security.",
+    "Options": "Renewal, extension, termination, expansion, contraction, purchase, or other lease option.",
+    "Area": "Leased premises area, suite, floor, measurement, or applicable area period.",
+}
+
+
+def _full_attribute_path(relative_name: str) -> str:
+    return f"{LEASE_ATTRIBUTE_PREFIX}{relative_name}"
+
+
+def _attribute_output_name(relative_name: str, category: str) -> str:
+    if category == "Restrictive Clauses" and relative_name != "Lease Status":
+        return f"Lease_Abstraction.{relative_name}"
+    return relative_name
+
+
+def _attribute_leaf_name(relative_name: str) -> str:
+    return re.sub(r"^.+?\.0\.", "", relative_name)
+
+
+def _attribute_definition(relative_name: str) -> str:
+    leaf_name = _attribute_leaf_name(relative_name)
+    hints = REFERENCE_HINTS.get("by_suffix", {})
+    guidance = hints.get(leaf_name, {}) if isinstance(hints, dict) else {}
+    definition = guidance.get("hint") if isinstance(guidance, dict) else None
+    if definition:
+        return str(definition)
+    parent = relative_name.split(".0.", 1)[0]
+    parent_definition = ATTRIBUTE_DEFINITION_OVERRIDES.get(parent)
+    if relative_name == parent and parent_definition:
+        return parent_definition
+    if parent_definition:
+        return f"{leaf_name} associated with {parent.lower()} information."
+    return f"Lease abstraction information for {leaf_name}."
+
+
+ATTRIBUTE_CATALOG: list[dict[str, str]] = [
+    {
+        "category": category,
+        "relative_name": relative_name,
+        "full_path": _full_attribute_path(relative_name),
+        "output_name": _attribute_output_name(relative_name, category),
+        "definition": _attribute_definition(relative_name),
+    }
+    for category, relative_names in ATTRIBUTE_CATEGORIES.items()
+    for relative_name in relative_names
+]
+ATTRIBUTE_BY_FULL_PATH = {item["full_path"]: item for item in ATTRIBUTE_CATALOG}
 
 
 def _load_env_file(path: Path) -> None:
@@ -340,20 +452,47 @@ def estimate_cost_usd(model_id: str, input_tokens: int, output_tokens: int) -> f
     return input_cost + output_cost
 
 
-def complete_with_bedrock(prompt: str) -> str:
+def complete_with_bedrock(
+    prompt: str,
+    *,
+    output_json_schema: dict[str, Any] | None = None,
+    output_schema_name: str = "structured_response",
+    output_schema_description: str | None = None,
+) -> str:
     if bedrock_client is None:
         raise RuntimeError("boto3 is required to run the legacy profiler LLM stage")
     request_started_at = time.perf_counter()
     resolved_model_id = bedrock_model_id
-    response = bedrock_client.converse(
-        modelId=resolved_model_id,
-        messages=[
+    request: dict[str, Any] = {
+        "modelId": resolved_model_id,
+        "messages": [
             {
                 "role": "user",
                 "content": [{"text": prompt}],
             }
         ],
-    )
+    }
+    if output_json_schema is not None:
+        json_schema_definition = {
+            "name": output_schema_name,
+            "schema": json.dumps(
+                output_json_schema,
+                ensure_ascii=False,
+                separators=(",", ":"),
+            ),
+        }
+        if output_schema_description:
+            json_schema_definition["description"] = output_schema_description
+        request["outputConfig"] = {
+            "textFormat": {
+                "type": "json_schema",
+                "structure": {
+                    "jsonSchema": json_schema_definition,
+                },
+            },
+        }
+
+    response = bedrock_client.converse(**request)
     elapsed_ms = int((time.perf_counter() - request_started_at) * 1000)
     usage = response.get("usage", {})
     metrics = response.get("metrics", {})
@@ -461,15 +600,19 @@ def mistral_ocr_markdown(file_path: str) -> str:
     return replace_table_refs_with_content(response.model_dump())
 
 def extract_json_from_response(response: str):
-    try:
-        start = response.find('{')
-        end = response.rfind('}') + 1
-        if start == -1 or end == 0 or end <= start:
-            return None
-        return json.loads(response[start:end])
-    except json.JSONDecodeError as e:
-        print(f"JSON decoding error: {e}")
-        return None
+    decoder = json.JSONDecoder()
+    last_error: json.JSONDecodeError | None = None
+    for match in re.finditer(r"\{", response):
+        try:
+            parsed, _ = decoder.raw_decode(response, match.start())
+        except json.JSONDecodeError as exc:
+            last_error = exc
+            continue
+        if isinstance(parsed, dict):
+            return parsed
+    if last_error is not None:
+        print(f"JSON decoding error: {last_error}")
+    return None
 
 
 def parse_markdown_response(response_text: str) -> dict[str, Any]:
@@ -830,99 +973,6 @@ def normalize_pdf_info_payload(pdf_info: dict[str, Any] | None) -> dict[str, Any
     return payload
 
 
-def _normalize_title_key(value: Any) -> str:
-    return re.sub(r"\s+", " ", str(value or "")).strip().lower()
-
-
-def build_section_spans(
-    section_titles_page_no: list[str],
-    page_count: int,
-    *,
-    buffer_pages: int = SECTION_SPAN_BUFFER_PAGES,
-) -> list[dict[str, Any]]:
-    entries: list[dict[str, Any]] = []
-    for raw_item in section_titles_page_no:
-        if not isinstance(raw_item, str) or " ||| page_no: " not in raw_item:
-            continue
-        title, page_no_text = raw_item.rsplit(" ||| page_no: ", 1)
-        title = title.strip()
-        try:
-            start_page = int(page_no_text.strip())
-        except Exception:
-            continue
-        if not title:
-            continue
-        entries.append({"title": title, "start_page": start_page})
-
-    if not entries:
-        return []
-
-    spans: list[dict[str, Any]] = []
-    for index, entry in enumerate(entries):
-        start_page = entry["start_page"]
-        next_start_page = entries[index + 1]["start_page"] if index + 1 < len(entries) else page_count + 1
-        end_page = min(max(start_page, next_start_page - 1), page_count)
-        buffered_start = max(1, start_page - buffer_pages)
-        buffered_end = min(page_count, end_page + buffer_pages)
-        spans.append(
-            {
-                "title": entry["title"],
-                "start_page": start_page,
-                "end_page": end_page,
-                "buffered_start_page": buffered_start,
-                "buffered_end_page": buffered_end,
-                "buffered_page_range": list(range(buffered_start, buffered_end + 1)),
-            }
-        )
-    return spans
-
-
-def format_section_spans_for_prompt(section_spans: list[dict[str, Any]]) -> str:
-    if not section_spans:
-        return "[]"
-    return json.dumps(section_spans, ensure_ascii=False, indent=2)
-
-
-def _titles_match(left: str, right: str) -> bool:
-    a = _normalize_title_key(left)
-    b = _normalize_title_key(right)
-    return bool(a and b and (a == b or a in b or b in a))
-
-
-def expand_attribute_page_ranges(
-    attribute_payload: dict[str, Any],
-    section_spans: list[dict[str, Any]],
-    page_count: int,
-) -> dict[str, Any]:
-    attribute_info = attribute_payload.get("attribute_info")
-    if not isinstance(attribute_info, dict):
-        return attribute_payload
-
-    for details in attribute_info.values():
-        if not isinstance(details, dict):
-            continue
-
-        matched_titles = details.get("might_be_present_under")
-        matched_pages: set[int] = set()
-        if isinstance(matched_titles, list):
-            for matched_title in matched_titles:
-                for span in section_spans:
-                    if _titles_match(matched_title, span.get("title", "")):
-                        matched_pages.update(span.get("buffered_page_range", []))
-
-        if matched_pages:
-            details["page_number_range"] = sorted(page for page in matched_pages if 1 <= int(page) <= page_count)
-            continue
-
-        page_range = details.get("page_number_range")
-        if isinstance(page_range, list) and page_range:
-            valid_pages = sorted({int(page) for page in page_range if isinstance(page, int) or str(page).isdigit()})
-            if valid_pages:
-                details["page_number_range"] = list(range(max(1, valid_pages[0]), min(page_count, valid_pages[-1]) + 1))
-
-    return attribute_payload
-
-
 def normalize_attribute_info_payload(attribute_payload: dict[str, Any]) -> dict[str, Any]:
     attribute_info = attribute_payload.get("attribute_info")
     if not isinstance(attribute_info, dict):
@@ -939,36 +989,6 @@ def normalize_attribute_info_payload(attribute_payload: dict[str, Any]) -> dict[
         else:
             present_flag = bool(present_flag)
         details["is_attribute_present_file"] = present_flag
-
-        if "Landlord Name" in str(attribute_name):
-            landlord_count = details.get("Landlord_count", 0 if not present_flag else None)
-            if isinstance(landlord_count, str) and landlord_count.strip().isdigit():
-                landlord_count = int(landlord_count.strip())
-            elif not isinstance(landlord_count, int):
-                landlord_count = 0 if not present_flag else landlord_count
-            details["Landlord_count"] = landlord_count
-            reason = details.get("reason")
-            if not isinstance(reason, str) or not reason.strip():
-                if present_flag:
-                    reason = "Landlord count inferred from the distinct landlord party names explicitly identified in the lease."
-                else:
-                    reason = "No landlord party name was explicitly identified in the lease."
-            details["reason"] = reason
-
-        count_key = REPEATABLE_ATTRIBUTE_COUNT_KEYS.get(str(attribute_name))
-        if count_key:
-            if not present_flag:
-                details[count_key] = 0
-                continue
-            raw_count = details.get(count_key, 0 if not present_flag else None)
-            if isinstance(raw_count, str):
-                normalized = raw_count.strip()
-                raw_count = int(normalized) if normalized.isdigit() else (0 if not present_flag else None)
-            elif not isinstance(raw_count, int):
-                raw_count = 0 if not present_flag else raw_count
-            if raw_count is None:
-                raw_count = 0 if not present_flag else 1
-            details[count_key] = max(0, raw_count)
 
     return attribute_payload
 
@@ -1138,15 +1158,17 @@ def extract_structure_info_from_markdown(markdown_text, objects=None, attributes
 def save_failed_attribute_info_attempt(
     source_file_path: str,
     attempt: int,
-    attributes: list,
+    page_number: int,
     response_text: str,
     parsed_response: Any,
 ) -> Path:
     source_path = Path(source_file_path).resolve()
-    output_path = source_path.with_name(f"{source_path.stem}_failed_attempt_{attempt}_attribute_info.json")
+    output_path = source_path.with_name(
+        f"{source_path.stem}_page_{page_number}_failed_attempt_{attempt}_attribute_info.json"
+    )
     payload = {
         "attempt": attempt,
-        "attributes": attributes,
+        "page_number": page_number,
         "raw_response": response_text,
         "parsed_response": parsed_response,
     }
@@ -1154,122 +1176,217 @@ def save_failed_attribute_info_attempt(
     return output_path
 
 
-def extract_attribute_info(attributes: list, section_titles: str, section_spans: str, page_count: int) -> tuple[dict[str, Any], str, Any]:
+def _attribute_boolean_template() -> dict[str, dict[str, bool]]:
+    return {
+        category: {
+            _full_attribute_path(relative_name): False
+            for relative_name in relative_names
+        }
+        for category, relative_names in ATTRIBUTE_CATEGORIES.items()
+    }
+
+
+def _page_attribute_json_schema() -> dict[str, Any]:
+    return {
+        "type": "object",
+        "properties": {
+            "page_number": {"type": "integer"},
+            "present_attributes": {
+                "type": "array",
+                "description": (
+                    "Exact attribute paths whose information is present on the page. "
+                    "Use an empty array when no listed attribute is present."
+                ),
+                "items": {
+                    "type": "string",
+                    "enum": [item["full_path"] for item in ATTRIBUTE_CATALOG],
+                },
+                "uniqueItems": True,
+            },
+        },
+        "required": ["page_number", "present_attributes"],
+        "additionalProperties": False,
+    }
+
+
+PAGE_ATTRIBUTE_JSON_SCHEMA = _page_attribute_json_schema()
+
+
+def _normalize_page_classification(parsed: Any, page_number: int) -> dict[str, Any] | None:
+    if not isinstance(parsed, dict):
+        return None
+
+    present_attributes = parsed.get("present_attributes")
+    if isinstance(present_attributes, list):
+        normalized = _attribute_boolean_template()
+        for full_path in present_attributes:
+            item = ATTRIBUTE_BY_FULL_PATH.get(str(full_path))
+            if item is None:
+                return None
+            normalized[item["category"]][item["full_path"]] = True
+        return {"page_number": page_number, **normalized}
+
+    # Accept the previous full Boolean matrix while old responses are retried.
+    raw_attributes = parsed.get("attributes", parsed)
+    if not isinstance(raw_attributes, dict):
+        return None
+
+    normalized = _attribute_boolean_template()
+    recognized = 0
+    for category, expected_attributes in normalized.items():
+        raw_category = raw_attributes.get(category)
+        if not isinstance(raw_category, dict):
+            continue
+        for full_path in expected_attributes:
+            if full_path not in raw_category:
+                continue
+            raw_value = raw_category[full_path]
+            if isinstance(raw_value, str):
+                value = raw_value.strip().lower() in {"true", "yes", "1", "present"}
+            else:
+                value = bool(raw_value)
+            expected_attributes[full_path] = value
+            recognized += 1
+    if recognized != len(ATTRIBUTE_CATALOG):
+        return None
+    return {"page_number": page_number, **normalized}
+
+
+def extract_attribute_info_for_page(
+    page_number: int,
+    page_text: str,
+) -> tuple[dict[str, Any] | None, str, Any]:
+    attribute_reference = [
+        {
+            "category": item["category"],
+            "attribute_path": item["full_path"],
+            "definition": item["definition"],
+        }
+        for item in ATTRIBUTE_CATALOG
+    ]
     prompt = f"""
-You are given:
-1. A list of lease attributes to analyze.
-2. A list of section titles from a lease document.
-3. Generic section spans derived from those section-title start pages.
-4. Structural context from the lease document.
+Classify the lease information present on PAGE {page_number} only.
 
-Your task is to return structured metadata for each attribute.
+Return an attribute path in present_attributes when this page contains any
+information relevant to it. Relevant context includes a value, definition,
+obligation, condition, exception, amendment, table row, address component, or
+cross-reference with substantive attribute information.
 
-For each attribute, provide the following:
-- definition: A one-sentence explanation of what the attribute means in a lease abstraction context.
-- is_attribute_present_file: true if the attribute is explicitly present anywhere in the file, otherwise false.
-- page_number_range: An approximate page range where this attribute might be located based on the section spans. Return all page numbers in the likely inclusive range, not only sparse title pages.
-- might_be_present_under: A list of section titles (from the given list) that are likely to contain this attribute, using fuzzy matching and semantic understanding.
+Be recall-oriented: when information is related to an attribute, include its path.
+Do not require the exact attribute label to appear. Do not infer content that is
+not supported by this page. Set page_number to {page_number}. Return an empty
+present_attributes array only when none of the listed attributes is relevant.
+The response is constrained by the supplied JSON Schema.
 
-Additional rule for landlord attributes:
-- For "Landlord Name", also return "Landlord_count" as the number of distinct landlords explicitly stated in the file. Return 0 if none are present.
-- For "Landlord Name", also return "reason" as a short justification for why that landlord count was assigned.
+ATTRIBUTE REFERENCE:
+{json.dumps(attribute_reference, ensure_ascii=False, separators=(",", ":"))}
 
-Additional rules for repeatable attributes:
-- For "Area", also return "area_count" as the number of distinct area rows/items explicitly supported by the file. Return 0 if none are present.
-- For "Expenses", also return "expenses_count" as the number of distinct recurring rent/expense rows or concurrent charge streams explicitly supported by the file. Return 0 if none are present.
-- For "Allowance", also return "allowance_count" as the number of distinct allowance or concession items explicitly supported by the file. Return 0 if none are present.
-- For "Security Deposit", also return "security_deposit_count" as the number of distinct deposit/security instruments or tranches explicitly supported by the file. Return 0 if none are present.
-- For "Options", also return "options_count" as the number of distinct option rights explicitly supported by the file. Return 0 if none are present.
-- Count only items explicitly evidenced in the file. Do not infer hidden rows/items.
-
-Use this rule generically for every attribute:
-- a section title marks where content begins, not necessarily where it ends
-- content can continue to later pages
-- prefer the provided buffered section spans over single title pages
-- if a section is likely, include the full inclusive pages from that buffered span
-
-Return only JSON in this format:
-
-{{
-  "attribute_info": {{
-    "Effective Date": {{
-      "definition": "...",
-      "is_attribute_present_file": true,
-      "page_number_range": [4,6,11,23],
-      "might_be_present_under": ["Basic Lease Information", "Term", "Premises"]
-    }},
-    "Landlord Name": {{
-      "definition": "...",
-      "is_attribute_present_file": true,
-      "Landlord_count": 2,
-      "reason": "Two distinct landlord entities are named in the parties section of the lease.",
-      "page_number_range": [1,2,3],
-      "might_be_present_under": ["Parties", "Basic Lease Information"]
-    }},
-    "Expenses": {{
-      "definition": "...",
-      "is_attribute_present_file": true,
-      "expenses_count": 3,
-      "page_number_range": [12,13,14],
-      "might_be_present_under": ["Rent", "Operating Expenses", "Schedule of Rent"]
-    }},
-    ...
-  }}
-}}
-
-Attributes to analyze:
-{attributes}
-
-Section Titles:
-{section_titles}
-
-Section Spans:
-{section_spans}
+PAGE {page_number} CONTENT:
+{page_text}
     """
 
-    response_text = complete_with_bedrock(prompt)
+    response_text = complete_with_bedrock(
+        prompt,
+        output_json_schema=PAGE_ATTRIBUTE_JSON_SCHEMA,
+        output_schema_name="lease_page_attribute_classification",
+        output_schema_description=(
+            "Exact lease attribute paths present on one document page."
+        ),
+    )
     response_preview = response_text.strip()
     parsed = extract_json_from_response(response_preview)
-    if not isinstance(parsed, dict):
-        print(f"extract_attribute_info returned non-dict response for batch {attributes}:")
-        print(response_preview)
-        return {}, response_preview, parsed
-    expanded = expand_attribute_page_ranges(parsed, json.loads(section_spans), page_count)
-    expanded = normalize_attribute_info_payload(expanded)
-    attribute_info = expanded.get("attribute_info")
-    if not isinstance(attribute_info, dict) or not attribute_info:
-        print(f"extract_attribute_info returned empty attribute_info for batch {attributes}:")
-        print(response_preview)
-    return expanded, response_preview, parsed
+    return _normalize_page_classification(parsed, page_number), response_preview, parsed
 
 
 def extract_attribute_info_with_retry(
-    attributes: list,
-    section_titles: str,
-    section_spans: str,
-    page_count: int,
+    page_number: int,
+    page_text: str,
     source_file_path: str,
     *,
     max_attempts: int = ATTRIBUTE_INFO_RETRY_ATTEMPTS,
 ) -> dict[str, Any]:
     for attempt in range(1, max_attempts + 1):
-        result, response_text, parsed_response = extract_attribute_info(attributes, section_titles, section_spans, page_count)
-        result = result or {}
-        attribute_info = result.get("attribute_info")
-        if isinstance(attribute_info, dict) and attribute_info:
+        result, response_text, parsed_response = extract_attribute_info_for_page(
+            page_number,
+            page_text,
+        )
+        if result is not None:
             return result
         failed_path = save_failed_attribute_info_attempt(
             source_file_path,
             attempt,
-            attributes,
+            page_number,
             response_text,
             parsed_response,
         )
         print(
-            f"attribute_info empty for batch {attributes} on attempt {attempt}/{max_attempts}"
+            f"attribute classification invalid for page {page_number} "
+            f"on attempt {attempt}/{max_attempts}"
         )
         print(f"saved failed attribute_info attempt to: {failed_path}")
-    return {}
+    raise RuntimeError(
+        f"Bedrock did not return the complete attribute matrix for page {page_number} "
+        f"after {max_attempts} attempts."
+    )
+
+
+def _page_headings(page_text: str) -> list[str]:
+    return [
+        title.strip()
+        for _, title in re.findall(r"^(#{1,6})\s+(.+)$", page_text, re.MULTILINE)
+        if title.strip()
+    ]
+
+
+def build_attribute_info_from_page_classifications(
+    page_classifications: list[dict[str, Any]],
+    pages: list[dict[str, Any]],
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    pages_by_number = {
+        int(page["page_number"]): str(page.get("text") or "")
+        for page in pages
+    }
+    present_pages: dict[str, set[int]] = {
+        item["full_path"]: set() for item in ATTRIBUTE_CATALOG
+    }
+    for classification in page_classifications:
+        page_number = int(classification["page_number"])
+        categories = classification.get("attributes", classification)
+        for category_values in categories.values():
+            if not isinstance(category_values, dict):
+                continue
+            for full_path, is_present in category_values.items():
+                if full_path in present_pages and bool(is_present):
+                    present_pages[full_path].add(page_number)
+
+    attribute_info: dict[str, Any] = {}
+    attributes_present: list[str] = []
+    for item in ATTRIBUTE_CATALOG:
+        page_numbers = sorted(present_pages[item["full_path"]])
+        headings: list[str] = []
+        for page_number in page_numbers:
+            for heading in _page_headings(pages_by_number.get(page_number, "")):
+                if heading not in headings:
+                    headings.append(heading)
+        output_name = item["output_name"]
+        details = {
+            "definition": item["definition"],
+            "category": item["category"],
+            "attribute_path": item["full_path"],
+            "is_attribute_present_file": bool(page_numbers),
+            "page_number_range": page_numbers,
+            "might_be_present_under": headings,
+        }
+        attribute_info[output_name] = details
+        if page_numbers:
+            attributes_present.append(output_name)
+
+    return {
+        "attributes_present": attributes_present,
+        "total_attributes": len(ATTRIBUTE_CATALOG),
+        "present_count": len(attributes_present),
+        "absent_count": len(ATTRIBUTE_CATALOG) - len(attributes_present),
+    }, normalize_attribute_info_payload({"attribute_info": attribute_info})["attribute_info"]
 
 def build_structured_json(
     markdown_text: str,
@@ -1283,44 +1400,40 @@ def build_structured_json(
     file_size_kb: float,
     source_s3_path: str | None,
 ) -> dict[str, Any]:
-    batch_size = ATTRIBUTE_INFO_BATCH_SIZE
     max_workers = max(1, ATTRIBUTE_INFO_MAX_WORKERS)
     now = datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
     pages_text_list = extract_pages_text_list(markdown_text)
+    page_entries = markdown_pages(markdown_text)
     author_info = normalize_pdf_info_payload(extract_pdf_info(markdown_text) or {})
     ext_str_info = time.time()
-    structure_info, section_titles, page_count = extract_structure_info_from_markdown(markdown_text)
-    section_spans = build_section_spans(section_titles, page_count)
-    section_spans_prompt = format_section_spans_for_prompt(section_spans)
+    structure_info, _, page_count = extract_structure_info_from_markdown(markdown_text)
     print(f"Text extraction took {round(time.time() - ext_str_info, 2)} seconds")
-    attribute_info: dict[str, Any] = {}
-    attribute_batches = [
-        attribute_list[i:i + batch_size]
-        for i in range(0, len(attribute_list), batch_size)
-    ]
-    worker_count = min(len(attribute_batches), max_workers) if attribute_batches else 1
-    if attribute_batches:
+    page_classifications: list[dict[str, Any]] = []
+    worker_count = min(len(page_entries), max_workers) if page_entries else 1
+    if page_entries:
         print(
-            f"Running {len(attribute_batches)} attribute batches in parallel "
-            f"(batch_size={batch_size}, max_workers={worker_count})"
+            f"Classifying {len(page_entries)} pages in parallel "
+            f"(max_workers={worker_count})"
         )
         with ThreadPoolExecutor(max_workers=worker_count) as executor:
-            future_to_batch = {
+            future_to_page = {
                 executor.submit(
                     extract_attribute_info_with_retry,
-                    attribute_batch,
-                    section_titles,
-                    section_spans_prompt,
-                    page_count,
+                    page["page_number"],
+                    page["text"],
                     diagnostic_path,
-                ): attribute_batch
-                for attribute_batch in attribute_batches
+                ): page["page_number"]
+                for page in page_entries
             }
-            for future in as_completed(future_to_batch):
-                attribute_batch = future_to_batch[future]
-                attribute_result = future.result() or {}
-                attribute_info.update(attribute_result.get("attribute_info", {}))
-                print(f"Completed attribute batch of {len(attribute_batch)} items")
+            for future in as_completed(future_to_page):
+                page_number = future_to_page[future]
+                page_classifications.append(future.result())
+                print(f"Completed attribute classification for page {page_number}")
+    page_classifications.sort(key=lambda item: int(item["page_number"]))
+    attribute_info_summary, attribute_info = build_attribute_info_from_page_classifications(
+        page_classifications,
+        page_entries,
+    )
 
     word_count = sum(len(page_text.split()) for page_text in pages_text_list)
 
@@ -1352,7 +1465,9 @@ def build_structured_json(
             "ocr_engine": ocr_engine,
         },
         "structure_info": structure_info,
-        "attribute_info": attribute_info
+        "attribute_info_summary": attribute_info_summary,
+        "attribute_info": attribute_info,
+        "attribute_page_classifications": page_classifications,
     }
     print(f"Structured JSON built in {round(time.time() - ext_str_info, 2)} seconds")
     print(structured_json)

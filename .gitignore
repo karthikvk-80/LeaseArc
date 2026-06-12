@@ -22,3 +22,4 @@ outputs/
 Data/pdf_files/*
 !Data/pdf_files/.gitkeep
 docs/*.pdf
+venv_la/*
