@@ -1,0 +1,99 @@
+{
+  "version": 1,
+  "notes": "Repeatable groups with fixed slot caps (max 50 per group). Excel includes only slots with at least one populated field — caps are upper bounds, not row count per run.",
+  "slot_caps": {
+    "Area": 50,
+    "Contact Identification": 50,
+    "Options": 50,
+    "Expenses": 50,
+    "Security Deposit": 50,
+    "Allowance": 50
+  },
+  "repeatable_groups": {
+    "Area": {
+      "slot_indices": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49],
+      "attributes_per_slot": [
+        "Lease_catalyst.Lease_Abstraction.Area.{i}.Unit/suite number",
+        "Lease_catalyst.Lease_Abstraction.Area.{i}.Type",
+        "Lease_catalyst.Lease_Abstraction.Area.{i}.Gross area",
+        "Lease_catalyst.Lease_Abstraction.Area.{i}.Gross Area UOM",
+        "Lease_catalyst.Lease_Abstraction.Area.{i}.Net area",
+        "Lease_catalyst.Lease_Abstraction.Area.{i}.Net Area UOM",
+        "Lease_catalyst.Lease_Abstraction.Area.{i}.Floor no.",
+        "Lease_catalyst.Lease_Abstraction.Area.{i}.Start date",
+        "Lease_catalyst.Lease_Abstraction.Area.{i}.End date",
+        "Lease_catalyst.Lease_Abstraction.Area.{i}.Duration"
+      ]
+    },
+    "Contact Identification": {
+      "slot_indices": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49],
+      "attributes_per_slot": [
+        "Lease_catalyst.Lease_Abstraction.Contact Identification.{i}.Contact Type",
+        "Lease_catalyst.Lease_Abstraction.Contact Identification.{i}.Name",
+        "Lease_catalyst.Lease_Abstraction.Contact Identification.{i}.Attention",
+        "Lease_catalyst.Lease_Abstraction.Contact Identification.{i}.Care of",
+        "Lease_catalyst.Lease_Abstraction.Contact Identification.{i}.DBA",
+        "Lease_catalyst.Lease_Abstraction.Contact Identification.{i}.Street no.",
+        "Lease_catalyst.Lease_Abstraction.Contact Identification.{i}.Street",
+        "Lease_catalyst.Lease_Abstraction.Contact Identification.{i}.Suite",
+        "Lease_catalyst.Lease_Abstraction.Contact Identification.{i}.P.O. Box",
+        "Lease_catalyst.Lease_Abstraction.Contact Identification.{i}.Zip code",
+        "Lease_catalyst.Lease_Abstraction.Contact Identification.{i}.City",
+        "Lease_catalyst.Lease_Abstraction.Contact Identification.{i}.State / Province",
+        "Lease_catalyst.Lease_Abstraction.Contact Identification.{i}.Country",
+        "Lease_catalyst.Lease_Abstraction.Contact Identification.{i}.Additional address details",
+        "Lease_catalyst.Lease_Abstraction.Contact Identification.{i}.Phone",
+        "Lease_catalyst.Lease_Abstraction.Contact Identification.{i}.Mobile",
+        "Lease_catalyst.Lease_Abstraction.Contact Identification.{i}.Fax",
+        "Lease_catalyst.Lease_Abstraction.Contact Identification.{i}.Email"
+      ]
+    },
+    "Options": {
+      "slot_indices": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49],
+      "attributes_per_slot": [
+        "Lease_catalyst.Lease_Abstraction.Options.{i}.Option type",
+        "Lease_catalyst.Lease_Abstraction.Options.{i}.Option status",
+        "Lease_catalyst.Lease_Abstraction.Options.{i}.Option Effective Date",
+        "Lease_catalyst.Lease_Abstraction.Options.{i}.Option End Date",
+        "Lease_catalyst.Lease_Abstraction.Options.{i}.Option Earliest Notice",
+        "Lease_catalyst.Lease_Abstraction.Options.{i}.Option Latest Notice Deadline",
+        "Lease_catalyst.Lease_Abstraction.Options.{i}.Options Comments"
+      ]
+    },
+    "Expenses": {
+      "slot_indices": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49],
+      "attributes_per_slot": [
+        "Lease_catalyst.Lease_Abstraction.Expenses.{i}.Rent Type",
+        "Lease_catalyst.Lease_Abstraction.Expenses.{i}.Start date",
+        "Lease_catalyst.Lease_Abstraction.Expenses.{i}.End date",
+        "Lease_catalyst.Lease_Abstraction.Expenses.{i}.Monthly Amount",
+        "Lease_catalyst.Lease_Abstraction.Expenses.{i}.Monthly Amount per SF",
+        "Lease_catalyst.Lease_Abstraction.Expenses.{i}.Annual Amount",
+        "Lease_catalyst.Lease_Abstraction.Expenses.{i}.Annual amount per SF",
+        "Lease_catalyst.Lease_Abstraction.Expenses.{i}.Currency",
+        "Lease_catalyst.Lease_Abstraction.Expenses.{i}.On Day",
+        "Lease_catalyst.Lease_Abstraction.Expenses.{i}.Payment Frequency"
+      ]
+    },
+    "Security Deposit": {
+      "slot_indices": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49],
+      "attributes_per_slot": [
+        "Lease_catalyst.Lease_Abstraction.Security Deposit.{i}.Security Deposit Type",
+        "Lease_catalyst.Lease_Abstraction.Security Deposit.{i}.Security Deposit Amount",
+        "Lease_catalyst.Lease_Abstraction.Security Deposit.{i}.Security Deposit Currency",
+        "Lease_catalyst.Lease_Abstraction.Security Deposit.{i}.Payment Date",
+        "Lease_catalyst.Lease_Abstraction.Security Deposit.{i}.Return Due Date",
+        "Lease_catalyst.Lease_Abstraction.Security Deposit.{i}.Security Deposit Comments"
+      ]
+    },
+    "Allowance": {
+      "slot_indices": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49],
+      "attributes_per_slot": [
+        "Lease_catalyst.Lease_Abstraction.Allowance.{i}.Allowance Type",
+        "Lease_catalyst.Lease_Abstraction.Allowance.{i}.Allowance Amount",
+        "Lease_catalyst.Lease_Abstraction.Allowance.{i}.Payment Deadline",
+        "Lease_catalyst.Lease_Abstraction.Allowance.{i}.Allowance Comments"
+      ]
+    }
+  }
+}

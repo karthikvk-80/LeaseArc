@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(.\\\\venv\\\\Scripts\\\\python.exe -c \"import ast; ast.parse\\(open\\('app/routers/leases.py', encoding='utf-8'\\).read\\(\\)\\); ast.parse\\(open\\('app/services/lease_persistence_pg.py', encoding='utf-8'\\).read\\(\\)\\); print\\('OK'\\)\")",
+      "Bash(cat)",
+      "Bash(\"/c/Users/xts24000156/Downloads/leaseArc_10June/backend/venv/Scripts/python.exe\" /tmp/test_load_pg.py)",
+      "Bash(cat > *)",
+      "Bash(/c/Users/xts24000156/Downloads/leaseArc_10June/backend/venv/Scripts/python.exe -c ' *)",
+      "Bash(./venv/Scripts/python.exe -c ' *)"
+    ],
+    "additionalDirectories": [
+      "\\tmp"
+    ]
+  }
+}

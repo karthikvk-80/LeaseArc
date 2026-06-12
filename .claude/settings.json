@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -c /tmp/cookie_wwuser.txt -X POST http://localhost:8000/api/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"user@wework.com\",\"password\":\"Wework@123\"}')",
+      "Bash(PYTHONPATH=. ./venv/Scripts/python.exe -c ' *)",
+      "Bash(findstr \"LISTENING\")",
+      "Bash(findstr -E \":8000|:5173|:3000|:4173\")",
+      "Bash(powershell -Command \"Get-CimInstance Win32_Process -Filter \\\\\"ProcessId=51248\\\\\" | Select-Object ProcessId,Name,CommandLine | Format-List\")",
+      "Bash(powershell -Command \"Stop-Process -Id 51248 -Force\")",
+      "Bash(C:/Python310/python.exe -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000)",
+      "Bash(findstr /C:\"Application startup complete\" \"C:\\\\Users\\\\XTS240~2\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-xts24000156-Downloads-leaseArc-10June\\\\1464b6db-b4ea-4caf-9cc4-fae903149ab6\\\\tasks\\\\bfcjrdpf8.output\")",
+      "Bash(findstr /C:\"TEST-PARTIES\" /C:\"Reloaded\" /C:\"Error\" /C:\"Warning\" /C:\"admin transformer\" \"C:\\\\Users\\\\XTS240~2\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-xts24000156-Downloads-leaseArc-10June\\\\1464b6db-b4ea-4caf-9cc4-fae903149ab6\\\\tasks\\\\bfcjrdpf8.output\")",
+      "Bash(findstr \":8000.*LISTENING\")",
+      "Bash(powershell -Command \"Get-CimInstance Win32_Process -Filter 'ProcessId=51248' | Select-Object ProcessId,Name,CommandLine | Format-List; Get-CimInstance Win32_Process -Filter 'ProcessId=53520' | Select-Object ProcessId,Name,CommandLine | Format-List\")",
+      "Bash(powershell -Command \"Stop-Process -Id 53520 -Force\")",
+      "Bash(.\\\\venv\\\\Scripts\\\\python.exe -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000)",
+      "Bash(./venv/Scripts/python.exe -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000)",
+      "Bash(powershell -Command \"Get-CimInstance Win32_Process -Filter 'ProcessId=53520 OR ProcessId=51248' | Select-Object ProcessId,Name,CommandLine | Format-List\")",
+      "Bash(powershell -Command \"Get-CimInstance Win32_Process -Filter 'ProcessId=51248 OR ProcessId=44128' | Select-Object ProcessId,Name,CommandLine | Format-List\")",
+      "Bash(./venv/Scripts/python.exe -c ' *)"
+    ]
+  }
+}

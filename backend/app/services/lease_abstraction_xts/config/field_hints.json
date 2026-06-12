@@ -1,0 +1,632 @@
+{
+  "by_suffix": {
+    "Property name": {
+      "hint": "The official name of the building, mall, or centre where the leased premises are located.",
+      "look_in": "Cover page, recitals, header, property description section.",
+      "format": "Proper noun string, e.g. 'Mall of the Emirates', 'One Canada Square'.",
+      "example": "Mall of the Emirates",
+      "exclude": "Do not return the tenant's company name or city name alone."
+    },
+    "Street": {
+      "hint": "Street name only (no number) for the property address.",
+      "look_in": "Property address block, cover page, recitals.",
+      "format": "Street name string, e.g. 'Sheikh Zayed Road'.",
+      "example": "Sheikh Zayed Road",
+      "exclude": "Do not include street number here."
+    },
+    "Street no": {
+      "hint": "Street number or building number for the property address.",
+      "look_in": "Property address block.",
+      "format": "Numeric or alphanumeric, e.g. '1', '10-12'.",
+      "example": "1",
+      "exclude": "Do not include street name here."
+    },
+    "Postal code": {
+      "hint": "Postcode, ZIP, or P.O. Box number for the licensed/leased premises (property location only). In UAE and similar markets the premises P.O. Box on the mall/site or licensor-at-premises block counts as the property postal code — extract the number only (e.g. 60811 from 'P.O. Box 60811').",
+      "look_in": "Cover page, recitals, premises/site description, licensed property address, mall name block, Exhibit A / schedule showing the unit location, and licensor notice address when it is clearly the same site as the premises.",
+      "format": "Digits/alphanumeric only — no words like 'P.O. Box'. Examples: '60811', '10001', 'SW1A 1AA'.",
+      "example": "60811",
+      "exclude": "Do NOT use the tenant's separate correspondence P.O. Box if it is a different address. Do NOT return N/A when the premises or licensor-at-site block shows P.O. Box or postcode."
+    },
+    "City": {
+      "hint": "City where the leased property is located.",
+      "look_in": "Property address, cover page, jurisdiction clause.",
+      "format": "City name, e.g. 'Dubai', 'London', 'New York'.",
+      "example": "Dubai",
+      "exclude": "Do not return country or state alone."
+    },
+    "County": {
+      "hint": "County, emirate, or administrative district of the property.",
+      "look_in": "Property address, governing law clause.",
+      "format": "County/emirate name, e.g. 'Dubai', 'Greater London'.",
+      "example": "Dubai",
+      "exclude": "N/A if not stated."
+    },
+    "State / province": {
+      "hint": "State, province, or emirate where the property is located.",
+      "look_in": "Property address, governing law, jurisdiction clause.",
+      "format": "State/province name, e.g. 'Dubai', 'New South Wales', 'California'.",
+      "example": "Dubai",
+      "exclude": "N/A if not applicable."
+    },
+    "Country": {
+      "hint": "Country where the property is located or where the agreement is governed.",
+      "look_in": "Property address, governing law clause, cover page.",
+      "format": "Full country name, e.g. 'United Arab Emirates', 'United Kingdom'.",
+      "example": "United Arab Emirates",
+      "exclude": "Do not abbreviate to UAE or UK unless document does so."
+    },
+    "Building Type": {
+      "hint": "Asset or property type classification.",
+      "look_in": "Property description, recitals, permitted use clause.",
+      "format": "Short descriptor, e.g. 'Shopping Centre', 'Office Building', 'Retail Mall'.",
+      "example": "Shopping Centre",
+      "exclude": "Do not return the tenant's business type."
+    },
+    "Total building area": {
+      "hint": "Total gross area of the entire building or centre (not just the leased unit).",
+      "look_in": "Property description, schedule of areas.",
+      "format": "Number only or number with UOM, e.g. '250000' or '250,000 sq ft'.",
+      "example": "250000",
+      "exclude": "Do not return the leased unit area here. N/A if not stated."
+    },
+    "UOM": {
+      "hint": "Unit of measure for the total building area.",
+      "look_in": "Area schedule, definitions section.",
+      "format": "Abbreviation: 'sq m', 'sq ft', 'sqm', 'sqft'.",
+      "example": "sq m",
+      "exclude": "N/A if total building area is not stated."
+    },
+    "Landlord Name": {
+      "hint": "Full legal name of the Licensor/Landlord — the party granting the lease.",
+      "look_in": "Parties clause, cover page, recitals, signature block.",
+      "format": "Full legal entity name including legal suffix (LLC, L.L.C, Ltd, PLC, etc.).",
+      "example": "Majid Al Futtaim Mall Of The Emirates L.L.C",
+      "exclude": "Do NOT return the tenant/licensee name here. Must be the party granting the right."
+    },
+    "Tenant Name": {
+      "hint": "Full legal name of the Licensee/Tenant — the party receiving the right to occupy.",
+      "look_in": "Parties clause, cover page, recitals, signature block.",
+      "format": "Full legal entity name including legal suffix.",
+      "example": "HSBC Bank Middle East Limited Dubai Branch",
+      "exclude": "Do NOT return the landlord/licensor name here. Must be the occupying party."
+    },
+    "Unit/suite number": {
+      "hint": "The identifier of the specific leased unit, suite, or FSU within the building.",
+      "look_in": "Premises description, license details table, annexures.",
+      "format": "Unit identifier, e.g. 'TSRV29', 'Suite 5A', 'Unit 12'.",
+      "example": "TSRV29",
+      "exclude": "Do not return the floor number alone."
+    },
+    "Type": {
+      "hint": "Area.{i}.Type = premises/unit category from the license details table or unit schedule (NOT permitted-use narrative). Examples: Commercial Bank, Commercial Block, Retail, Office, Banking.",
+      "look_in": "License details table, premises schedule, Exhibit A unit row for this suite. Use the explicit 'Type' / unit category column or label beside Unit/suite number.",
+      "format": "Short phrase exactly as stated for the unit (e.g. 'Commercial Bank', 'Commercial Block').",
+      "example": "Commercial Bank",
+      "exclude": "Do NOT use generic zone labels ('Designated Area', 'Licensed Area', 'FSU', 'Designated FSU') unless that exact phrase is the unit Type in the table. Do not return Building Type or mall zone name here."
+    },
+    "Gross area": {
+      "hint": "Gross lettable or licensed area of the specific leased unit/premises.",
+      "look_in": "Premises description, area schedule, license details, annexure.",
+      "format": "Number only, e.g. '17.46'. Do NOT include UOM in this field.",
+      "example": "17.46",
+      "exclude": "Do not return total building area. Do not include sq m or sq ft here."
+    },
+    "Gross Area UOM": {
+      "hint": "Unit of measure for the gross area of the leased premises.",
+      "look_in": "Same location as gross area figure.",
+      "format": "'sq m', 'sq ft', 'sqm', 'sqft'.",
+      "example": "sq m",
+      "exclude": "N/A if gross area is not stated."
+    },
+    "Net area": {
+      "hint": "Net internal area of the leased premises if stated separately from gross.",
+      "look_in": "Area schedule, premises description, technical annexure.",
+      "format": "Number only, e.g. '15.00'.",
+      "example": "N/A",
+      "exclude": "N/A if not separately stated. Do NOT copy gross area here."
+    },
+    "Net Area UOM": {
+      "hint": "Unit of measure for net area.",
+      "look_in": "Same as net area.",
+      "format": "'sq m', 'sq ft'.",
+      "example": "N/A",
+      "exclude": "N/A if net area not stated."
+    },
+    "Floor no.": {
+      "hint": "Floor level where the leased premises are located.",
+      "look_in": "Premises description, unit description, license details.",
+      "format": "Floor descriptor, e.g. '2nd Floor', 'Ground Floor', 'Level 3', '2'.",
+      "example": "2nd Floor",
+      "exclude": "N/A if not stated."
+    },
+    "Start date": {
+      "hint": "Commencement date of the lease term or area schedule.",
+      "look_in": "Term clause, area schedule, license details table.",
+      "format": "Date as stated, prefer dd/mm/yyyy. e.g. '31/01/2026'.",
+      "example": "31/01/2026",
+      "exclude": "Do not return execution date or signing date here."
+    },
+    "End date": {
+      "hint": "Expiry or termination date of the lease term.",
+      "look_in": "Term clause, area schedule, license details table.",
+      "format": "Date as stated, prefer dd/mm/yyyy. e.g. '30/01/2029'.",
+      "example": "30/01/2029",
+      "exclude": "Do not return notice period expiry or option exercise date."
+    },
+    "Duration": {
+      "hint": "Length of the lease or area term expressed as a period.",
+      "look_in": "Term clause, area schedule.",
+      "format": "Period string, e.g. '3 years', '36 months', '3 (Three) Years'.",
+      "example": "3 years",
+      "exclude": "Do not return start or end dates here."
+    },
+    "Effective Date": {
+      "hint": "The date the agreement becomes legally effective, often the date stated on the cover or recitals.",
+      "look_in": "Cover page recital: 'This agreement is made on [date]', opening line.",
+      "format": "Date as stated, e.g. '15 January, 2026' or '15/01/2026'.",
+      "example": "15/01/2026",
+      "exclude": "Different from execution/signing date if both stated."
+    },
+    "Execution Date": {
+      "hint": "Date the agreement was actually signed/executed by the parties.",
+      "look_in": "Signature block, execution clause, cover page.",
+      "format": "Date as stated.",
+      "example": "15/01/2026",
+      "exclude": "N/A if not separately stated from effective date."
+    },
+    "Original Commencement Date": {
+      "hint": "The very first start date of the ORIGINAL/PRIOR lease term — NOT the current renewal term.",
+      "look_in": "Recitals of renewal/amendment ('original term commenced', 'prior agreement'), definitions.",
+      "format": "Date as stated.",
+      "example": "N/A",
+      "exclude": "Never copy Current Commencement Date here on renewals. N/A if original (not renewal) lease and not stated."
+    },
+    "Rent Commencement Date": {
+      "hint": "The date from which rent or license fee payments begin to accrue.",
+      "look_in": "Payment terms, rent commencement clause, license details, Exhibit A.",
+      "format": "Date as stated.",
+      "example": "31/01/2026",
+      "exclude": "May differ from lease commencement if rent-free period applies."
+    },
+    "Current Commencement Date": {
+      "hint": "The commencement date of THIS agreement's current term (renewal/amendment period or original lease start).",
+      "look_in": "Term clause, License Term table, renewal recitals, license details.",
+      "format": "Date as stated.",
+      "example": "31/01/2026",
+      "exclude": "Do not use prior/original term dates. On original base leases, same as lease commencement."
+    },
+    "Current Expiration Date": {
+      "hint": "The expiry date of the current term.",
+      "look_in": "Term clause, license details, payment schedule.",
+      "format": "Date as stated.",
+      "example": "30/01/2029",
+      "exclude": "Do not return option/renewal expiry dates."
+    },
+    "Original Expiration Date": {
+      "hint": "The expiry date of the ORIGINAL/PRIOR term before this renewal — NOT Current Expiration.",
+      "look_in": "Recitals of renewal/amendment ('original term expired', 'prior agreement').",
+      "format": "Date as stated.",
+      "example": "N/A",
+      "exclude": "Never copy Current Expiration Date here on renewals. N/A if original lease and not stated."
+    },
+    "Possession Date": {
+      "hint": "Date the tenant takes physical possession of the premises.",
+      "look_in": "Possession clause, handover clause, conditions precedent.",
+      "format": "Date as stated.",
+      "example": "N/A",
+      "exclude": "N/A if not stated. Different from commencement date if fitout period applies."
+    },
+    "Delivery Date": {
+      "hint": "Date the landlord delivers the premises to the tenant.",
+      "look_in": "Delivery clause, handover clause.",
+      "format": "Date as stated.",
+      "example": "N/A",
+      "exclude": "N/A if not stated."
+    },
+    "Term Duration": {
+      "hint": "Overall duration of the entire lease term.",
+      "look_in": "Term clause, cover page, license details.",
+      "format": "Period string with number and unit, e.g. '3 years', '5 years 6 months'.",
+      "example": "3 years",
+      "exclude": "Must contain a number and time unit. Do not return dates."
+    },
+    "Lease Status": {
+      "hint": "Current status of the lease agreement.",
+      "look_in": "Cover page, execution block, agreement type.",
+      "format": "Status word, e.g. 'Executed', 'Active', 'Signed', 'Renewal'.",
+      "example": "Executed",
+      "exclude": "N/A if status cannot be determined."
+    },
+    "Contact Type": {
+      "hint": "The role or party label for this contact block.",
+      "look_in": "Parties clause — match index to the correct party (0=Licensor/Landlord, 1=Licensee/Tenant, 2+=other).",
+      "format": "'Licensor', 'Licensee', 'Landlord', 'Tenant', 'Guarantor', 'Notices'.",
+      "example": "Licensor",
+      "exclude": "Do not mix up landlord and tenant blocks."
+    },
+    "Name": {
+      "hint": "Full legal name for this specific contact block party.",
+      "look_in": "Parties clause, signature block — for the index indicated.",
+      "format": "Full legal name with entity suffix.",
+      "example": "Majid Al Futtaim Mall Of The Emirates L.L.C",
+      "exclude": "Must match the party for this contact index. Do not copy wrong party name."
+    },
+    "Attention": {
+      "hint": "Attention line or named individual for notices to this party.",
+      "look_in": "Notices clause, contact details for this party.",
+      "format": "Person name or title, e.g. 'The Legal Director'.",
+      "example": "N/A",
+      "exclude": "N/A if not stated."
+    },
+    "Care of": {
+      "hint": "C/O or care of line for this contact.",
+      "look_in": "Contact/notices address block.",
+      "format": "Entity or person name.",
+      "example": "N/A",
+      "exclude": "N/A if not stated."
+    },
+    "DBA": {
+      "hint": "Trading name or 'doing business as' name for this party.",
+      "look_in": "Party definitions, cover page.",
+      "format": "Trading name string.",
+      "example": "N/A",
+      "exclude": "N/A if not stated."
+    },
+    "Suite": {
+      "hint": "Suite number within the party's contact address (not the leased premises).",
+      "look_in": "Contact address block for this party in notices clause.",
+      "format": "Suite identifier.",
+      "example": "N/A",
+      "exclude": "N/A if not stated. Do not use leased premises suite number."
+    },
+    "P.O. Box": {
+      "hint": "PO Box number for this party's contact address.",
+      "look_in": "Party address block, notices clause.",
+      "format": "PO Box number only, e.g. '60811' or 'P O Box 60811'.",
+      "example": "60811",
+      "exclude": "N/A if not stated."
+    },
+    "Zip code": {
+      "hint": "ZIP/postal code for THIS contact party's address only.",
+      "look_in": "This party's address block in parties clause or notices.",
+      "format": "Postal code as stated.",
+      "example": "N/A",
+      "exclude": "N/A if not stated for this party. NEVER copy property postal code here."
+    },
+    "Phone": {
+      "hint": "Telephone number for this contact party.",
+      "look_in": "Party contact details, notices clause.",
+      "format": "Phone number as stated.",
+      "example": "N/A",
+      "exclude": "N/A if not stated."
+    },
+    "Mobile": {
+      "hint": "Mobile/cell phone number for this contact party.",
+      "look_in": "Party contact details.",
+      "format": "Mobile number as stated.",
+      "example": "N/A",
+      "exclude": "N/A if not stated."
+    },
+    "Fax": {
+      "hint": "Fax number for this contact party.",
+      "look_in": "Party contact details, notices clause.",
+      "format": "Fax number as stated.",
+      "example": "N/A",
+      "exclude": "N/A if not stated."
+    },
+    "Email": {
+      "hint": "Email address for this contact party.",
+      "look_in": "Party contact details, notices clause.",
+      "format": "Email address as stated.",
+      "example": "N/A",
+      "exclude": "N/A if not stated."
+    },
+    "Additional address details": {
+      "hint": "Any address information for this party not captured in other fields — building name, floor, area, landmark.",
+      "look_in": "Party address block.",
+      "format": "Verbatim text.",
+      "example": "N/A",
+      "exclude": "N/A if nothing additional."
+    },
+    "Rent Type": {
+      "hint": "Classification of this expense/rent row, e.g. Base Rent, License Fee, Service Charge.",
+      "look_in": "Payment terms, Exhibit A, rent schedule.",
+      "format": "'Base Rent', 'License Fee', 'Service Charge', 'CAM', etc.",
+      "example": "License Fee",
+      "exclude": "Do not return a date or amount here."
+    },
+    "Monthly Amount": {
+      "hint": "Monthly rent/expense amount for this expense row.",
+      "look_in": "Payment schedule, Exhibit A, rent table.",
+      "format": "Number only without currency, e.g. '172431.27'. Derive from annual if needed (annual/12).",
+      "example": "172431.27",
+      "exclude": "Do not include currency symbol. N/A if only annual is stated and cannot divide."
+    },
+    "Monthly Amount per SF": {
+      "hint": "Monthly amount per square foot or square metre.",
+      "look_in": "Rent schedule, payment terms.",
+      "format": "Number only.",
+      "example": "N/A",
+      "exclude": "N/A if not stated."
+    },
+    "Annual Amount": {
+      "hint": "Annual rent or expense amount for this expense row.",
+      "look_in": "Payment schedule, Exhibit A, license fee table.",
+      "format": "Number only without currency, e.g. '656376.00'.",
+      "example": "656376.00",
+      "exclude": "Do not include VAT. Do not include currency symbol."
+    },
+    "Annual amount per SF": {
+      "hint": "Annual amount per square foot or square metre.",
+      "look_in": "Rent schedule.",
+      "format": "Number only.",
+      "example": "N/A",
+      "exclude": "N/A if not stated."
+    },
+    "Currency": {
+      "hint": "Currency code or name for this expense row.",
+      "look_in": "Payment terms, rent schedule, license details.",
+      "format": "ISO currency code or full name, e.g. 'AED', 'USD', 'GBP', 'HKD'.",
+      "example": "AED",
+      "exclude": "Do not return symbol like $ or £ alone."
+    },
+    "On Day": {
+      "hint": "Day of the month on which payment is due.",
+      "look_in": "Payment terms clause, Exhibit A.",
+      "format": "Day number, e.g. '24' or '1st'.",
+      "example": "24",
+      "exclude": "N/A if not stated."
+    },
+    "Payment Frequency": {
+      "hint": "How often rent/expense payments are made.",
+      "look_in": "Payment terms clause.",
+      "format": "'Monthly', 'Quarterly', 'Annually', 'Semi-annually'.",
+      "example": "Annually",
+      "exclude": "N/A if not stated."
+    },
+    "Default": {
+      "hint": "Summarize the default and remedies clause — what constitutes default and what happens.",
+      "look_in": "Default clause, remedies clause, consequences of breach.",
+      "format": "Concise summary of key default triggers and remedies.",
+      "example": "Licensor may impose default penalty of AED 2,000/day for each day of default. Security deposit may be applied.",
+      "exclude": "Lease is silent ONLY if no default/remedy clause exists anywhere."
+    },
+    "Estoppel": {
+      "hint": "Summarize any estoppel certificate or non-disturbance provisions.",
+      "look_in": "Estoppel clause, SNDA clause.",
+      "format": "Brief summary.",
+      "example": "Lease is silent.",
+      "exclude": "Lease is silent if no estoppel clause found after full search."
+    },
+    "Business Hours": {
+      "hint": "Operating/business hours requirements for the premises.",
+      "look_in": "Hours of operation clause, rules and regulations, annexures.",
+      "format": "Summary of required hours.",
+      "example": "As advised by Centre Management.",
+      "exclude": "Lease is silent only if not addressed anywhere including annexures."
+    },
+    "Late Charges": {
+      "hint": "Penalty or interest for late payment of rent.",
+      "look_in": "Late payment clause, default clause, payment terms.",
+      "format": "Summary with amount or rate if stated.",
+      "example": "Default penalty of AED 2,000 per day applies.",
+      "exclude": "Lease is silent only if no late charge provision exists."
+    },
+    "Repair and Maintenance": {
+      "hint": "Who is responsible for repairs and maintenance of the premises.",
+      "look_in": "Repair and maintenance clause, tenant obligations.",
+      "format": "Brief summary of obligations.",
+      "example": "Tenant responsible for maintaining FSU in good condition per Visual Merchandising Guidelines.",
+      "exclude": "Lease is silent only if not addressed."
+    },
+    "Insurance Requirements": {
+      "hint": "Insurance obligations for landlord and/or tenant.",
+      "look_in": "Insurance clause, tenant obligations.",
+      "format": "Summary of required coverages.",
+      "example": "Lease is silent.",
+      "exclude": "Lease is silent if no insurance clause found."
+    },
+    "Parking": {
+      "hint": "Parking rights, allocations, or restrictions.",
+      "look_in": "Parking clause, rules and regulations, annexures.",
+      "format": "Summary of parking provisions.",
+      "example": "Lease is silent.",
+      "exclude": "Lease is silent if not addressed."
+    },
+    "Signage": {
+      "hint": "Signage rights and restrictions for the tenant.",
+      "look_in": "Signage clause, visual merchandising guidelines, rules.",
+      "format": "Summary of signage rights.",
+      "example": "Signage design and size subject to Licensor's prior written approval.",
+      "exclude": "Lease is silent only if no signage provision anywhere."
+    },
+    "Surrender": {
+      "hint": "Obligations upon surrender or expiry of the lease.",
+      "look_in": "Surrender clause, consequences of termination, expiry obligations.",
+      "format": "Summary of surrender requirements.",
+      "example": "Tenant must cease operations, remove FSU, vacate premises, and settle all accounts within 1 week.",
+      "exclude": "Lease is silent only if not addressed."
+    },
+    "Holdover": {
+      "hint": "What happens if tenant remains in occupation after lease expiry.",
+      "look_in": "Holdover clause, overholding clause.",
+      "format": "Summary.",
+      "example": "Lease is silent.",
+      "exclude": "Lease is silent if not addressed."
+    },
+    "Permitted Use": {
+      "hint": "The specific use(s) the tenant is permitted to conduct at the premises.",
+      "look_in": "Permitted use clause, description of services, license details.",
+      "format": "Description of permitted activity.",
+      "example": "Banking / financial services only.",
+      "exclude": "Do not return general property use type."
+    },
+    "Assignment/Sublet": {
+      "hint": "Whether tenant can assign the lease or sublet the premises.",
+      "look_in": "Assignment clause, subletting clause.",
+      "format": "Summary of rights or restrictions.",
+      "example": "Assignment not permitted without prior written consent of Licensor.",
+      "exclude": "Lease is silent only if not addressed."
+    },
+    "Alterations": {
+      "hint": "Tenant rights to make alterations or improvements to the premises.",
+      "look_in": "Alterations clause, fitout clause, tenant works.",
+      "format": "Summary of rights and restrictions.",
+      "example": "No alterations without prior written approval of Licensor.",
+      "exclude": "Lease is silent only if not addressed."
+    },
+    "Operating Expenses": {
+      "hint": "Tenant's obligations for operating expenses, CAM, or service charges.",
+      "look_in": "Operating expenses clause, service charge clause, CAM provisions.",
+      "format": "Summary.",
+      "example": "Lease is silent.",
+      "exclude": "Lease is silent if not addressed."
+    },
+    "RE Taxes": {
+      "hint": "Real estate tax obligations and allocation between landlord and tenant.",
+      "look_in": "Tax clause, rates clause.",
+      "format": "Summary.",
+      "example": "Lease is silent.",
+      "exclude": "Lease is silent if not addressed. Note VAT separately."
+    },
+    "Property Insurance": {
+      "hint": "Property or building insurance obligations.",
+      "look_in": "Insurance clause.",
+      "format": "Summary.",
+      "example": "Lease is silent.",
+      "exclude": "Lease is silent if not addressed."
+    },
+    "Restricted Uses": {
+      "hint": "Uses that are restricted but not fully prohibited.",
+      "look_in": "Restricted use clause, use restrictions.",
+      "format": "List or summary.",
+      "example": "Lease is silent.",
+      "exclude": "Lease is silent if not addressed."
+    },
+    "Prohibited Uses": {
+      "hint": "Uses that are explicitly prohibited at the premises.",
+      "look_in": "Prohibited use clause.",
+      "format": "List or summary.",
+      "example": "Lease is silent.",
+      "exclude": "Lease is silent if not addressed."
+    },
+    "Exclusive Use": {
+      "hint": "Any exclusive use rights granted to the tenant.",
+      "look_in": "Exclusive use clause. Note: non-exclusive licenses may explicitly state no exclusivity.",
+      "format": "Summary.",
+      "example": "License is non-exclusive. Licensor may grant similar licenses to others.",
+      "exclude": "Lease is silent only if not mentioned at all."
+    },
+    "Percentage Rent (Payment)": {
+      "hint": "Any percentage rent or turnover rent payment obligations.",
+      "look_in": "Percentage rent clause, turnover rent provisions.",
+      "format": "Summary with percentage if stated.",
+      "example": "N/A",
+      "exclude": "N/A if explicitly stated as N/A in document. Lease is silent if not addressed."
+    },
+    "Gross Sales (Reporting)": {
+      "hint": "Tenant's obligations to report gross sales figures.",
+      "look_in": "Gross sales reporting clause, percentage rent provisions.",
+      "format": "Summary.",
+      "example": "N/A",
+      "exclude": "N/A if percentage rent is N/A."
+    },
+    "Go dark": {
+      "hint": "Tenant's right to cease operations while continuing to pay rent.",
+      "look_in": "Go dark clause, continuous operation clause.",
+      "format": "Summary.",
+      "example": "Tenant must remain open during all Centre operating hours. Closure penalty applies.",
+      "exclude": "Lease is silent only if continuous operation requirements not addressed."
+    },
+    "Co-Tenancy": {
+      "hint": "Co-tenancy rights or requirements.",
+      "look_in": "Co-tenancy clause.",
+      "format": "Summary.",
+      "example": "Lease is silent.",
+      "exclude": "Lease is silent if not addressed."
+    },
+    "Radius Restrictions": {
+      "hint": "Geographic restrictions on tenant opening competing locations.",
+      "look_in": "Radius restriction clause.",
+      "format": "Summary with distance if stated.",
+      "example": "Lease is silent.",
+      "exclude": "Lease is silent if not addressed."
+    },
+    "Tenant Improvement Allowance": {
+      "hint": "Any allowance paid by landlord toward tenant's fitout or improvements.",
+      "look_in": "TI allowance clause, fitout contribution, landlord works.",
+      "format": "Amount and conditions.",
+      "example": "Lease is silent.",
+      "exclude": "Lease is silent if not addressed."
+    },
+    "Brokers": {
+      "hint": "Broker or agent commission provisions.",
+      "look_in": "Brokers clause, agent clause.",
+      "format": "Summary.",
+      "example": "Lease is silent.",
+      "exclude": "Lease is silent if not addressed."
+    },
+    "Notices": {
+      "hint": "Notice provisions — how and where notices must be served.",
+      "look_in": "Notices clause, service of notices.",
+      "format": "Summary of notice requirements and addresses.",
+      "example": "Notices to be served at addresses stated in the License.",
+      "exclude": "Lease is silent only if no notices clause at all."
+    },
+    "Base Rent Comments": {
+      "hint": "Any special comments, notes, or conditions relating to base rent or license fee.",
+      "look_in": "Payment terms, Exhibit A, rent schedule, footnotes.",
+      "format": "Free text summary of any special rent terms.",
+      "example": "License Fee increases annually. Year 1: AED 656,376. Year 2: AED 689,194.80. Year 3: AED 723,654.48.",
+      "exclude": "N/A if no special comments."
+    },
+    "Utilities": {
+      "hint": "Utility supply arrangements and responsibilities.",
+      "look_in": "Utilities clause, mechanical electrical plumbing provisions, rules and regulations.",
+      "format": "Summary of utility responsibilities.",
+      "example": "Electricity provided by Licensor at no extra charge during operating hours.",
+      "exclude": "Lease is silent only if not addressed anywhere."
+    }
+  },
+  "contact_index": {
+    "0": "Landlord / Lessor / Licensor — primary notice block. Extract full address, phone, email for landlord only.",
+    "1": "Tenant / Lessee / Licensee — primary notice block. Extract full address, phone, email for tenant only.",
+    "2": "Payment / remittance contact — cheques payable, AP, accounts payable, wire, lockbox, rent payment address when distinct from .0/.1.",
+    "3": "Additional party — counsel, broker, guarantor, property manager, contractor, or other named notice addressee.",
+    "4": "Additional party — further notice copy, legal, or email-only contact (fill Email even if address is N/A).",
+    "5": "Witness or signatory contact block if listed separately from landlord/tenant."
+  },
+  "clause_value_format": "Detailed factual abstraction (3-8 sentences): state rights, obligations, notice periods, amounts, caps, conditions, and exceptions as written. Not a one-line summary. If silent after full search, use Lease is silent.",
+  "clauses_group_note": "CLAUSE FIELDS — value must be a detailed factual abstraction of what the lease states (not a one-line summary). Include specific triggers, notice periods, amounts, approval requirements, and party obligations. context must quote the operative clause sentence(s). Search ALL pages, schedules, rules, and annexures before Lease is silent.",
+  "date_fields_note": "DATE FIELDS — context MUST contain the exact lease sentence or table cell with the date. Execution Date = signature block date when stated (not cover 'made on' unless no signature date). Effective Date = agreement made/effective date on cover or recitals. Current Expiration must be after Current Commencement. Rent Commencement may follow Current Commencement if a rent-free period applies.",
+  "repeatable_slots_note": "REPEATABLE SLOTS: items[] order maps to .0, .1, .2 … in Excel. Return ONE object per distinct row — all fields for that row in ONE object. For Contacts: core landlord/tenant/payment/notice parties only (.0 Landlord → .1 Tenant → .2+ notice/payment roles). For Expenses: one item per rent-schedule year or charge line with a stated dollar amount. Continue .2, .3 … only when additional distinct rows exist; do not pad empty slots.",
+  "contacts_group_note": "CONTACT IDENTIFICATION — CORE PARTIES ONLY:\n- Extract Landlord/Lessor, Tenant/Lessee, Payment Contact, and Notice Copy for those parties. Same entity may appear multiple times with different Contact Type.\n- Do NOT extract contractors, utilities, property managers, county attorneys, exhibit vendors, or brokers unless they are a core party notice addressee.\n- ONE items[] object per contact = ALL address fields together (Street, City, Zip in the SAME item). NEVER split Street, City, Zip across separate items.\n- SLOT ORDER: .0 primary Landlord/Lessor → .1 primary Tenant/Lessee → .2+ additional Notice Copy or Payment Contact for core parties.\n- Fill all stated fields; N/A only when truly absent for that block.",
+  "area_group_note": "AREA — one item per distinct premises/space row (.0, .1, .2+ for multiple suites, floors, or phased areas). Type = unit category from the table (e.g. Commercial Bank), not generic zone headings like 'Designated Area'. Match Type to the same row as unit number and area figures.",
+  "options_group_note": "OPTIONS — one item per distinct option (renewal, expansion, termination, purchase, relocation, etc.). Use .2, .3, … for each additional option beyond the first two; do not combine multiple option rights into one item.",
+  "security_deposit_group_note": "SECURITY DEPOSIT — one item per separate deposit obligation (cash, letter of credit, guarantor deposit, top-up, holdover). Use .2+ when the lease states more than two deposit types or tranches.",
+  "allowance_group_note": "ALLOWANCE — one item per distinct allowance (TI, rent abatement, moving allowance, landlord contribution). Use .2+ for each separate allowance with its own amount or deadline.",
+  "expenses_group_note": "EXPENSES group (critical):\n- items[0] (Expenses.0) = CURRENT lease term / first lease year rent — NOT a prior or historical period.\n- Expenses.0 Start date and End date MUST match Current Commencement Date and Current Expiration Date from Pass 1 when those are known.\n- One items[] entry per rent-schedule year/period or recurring charge line WITH a stated dollar amount (including $0.00).\n- Do NOT create expense items for narrative-only charges (utilities, personal property tax estimates) with no amount — those belong in clause summaries.\n- Rent escalation tables: each LEASE YEAR row with ANNUAL/MONTHLY = separate item.\n- US retail/office: map 'Fixed Rent' / 'Base Rent' schedule rows; fill Annual Amount and Monthly Amount when both appear.\n- CAM/insurance/tax only when amount is stated (0.00 is valid). Rent Type must be a label whenever any amount is extracted.\n- Use commencement/term dates to set Start/End per lease year when the table lacks calendar dates.",
+  "core_address_note": "PROPERTY ADDRESS (this pass — flat fields only):\n- Postal code: postcode, ZIP, or P.O. Box number for the licensed premises / mall / site. Return the numeric/alphanumeric code only (e.g. 60811), never the words 'P.O. Box'.\n- Search cover page, recitals, premises or site clause, Exhibit A, and licensor notice address when it is the same location as the premises.\n- Do not return N/A for Postal code when any premises or licensor-at-site address shows P.O. Box or postcode.",
+  "pass_notes": {
+    "core": "Focus on: property name/address (including Street, Postal code from premises P.O. Box), landlord name, tenant name, building type, term duration, lease status, AND all date fields (Effective, Execution, Original/Current Commencement/Expiration, Rent Commencement, Possession). For each date: quote the exact source sentence in context. Also extract Options, Security Deposit, and Allowance repeatables. Search License Details, recitals, signature blocks, and property blocks.",
+    "renewal_dates": "RENEWAL / AMENDMENT agreements: Original Commencement and Original Expiration = the PRIOR term only (from recitals, 'original term commenced', 'prior agreement'). Current Commencement / Current Expiration = THIS renewal term (License Term / current period table). Execution Date = date in SIGNATURE block when parties signed — NOT the cover 'made on' date unless no signature date exists. Effective Date = agreement made/effective date on cover or recitals. Never copy current term dates into Original Commencement/Expiration fields. context must quote the recital or table cell for each date.",
+    "options_deposit": "Dedicated pass for Options, Security Deposit, and Allowance only. OPTIONS: extract every termination, break/cancel, relocation, renewal, and expiry right as separate items[] rows (Rolling Cancel, Relocation, Lease Expiry, etc.) with option type, status, effective/end dates, notice deadlines, and comments. SECURITY DEPOSIT: Cash/LC type, currency, amount, payment date, return date, comments from License Details table.",
+    "contacts": "Extract contact details for each party block by index. Index 0 = Landlord/Licensor. Index 1 = Tenant/Licensee. Index 2+ = other named parties. CRITICAL: Do NOT copy landlord details into tenant fields or vice versa. For absent sub-fields use N/A. Do NOT use property postal code as contact zip code.",
+    "core_deposit_allowance": "Extract Security Deposit, Allowance, and Options repeatables: one items[] entry per distinct deposit/allowance/option (.0, .1, .2+ — do not stop at two if the lease lists more).",
+    "contacts_area": "Extract Contact Identification and Area. CORE PARTIES ONLY: .0 Landlord/Lessor, .1 Tenant/Lessee, .2+ payment/notice roles for those parties. All address fields in ONE item per contact. Area: one item per premises row.",
+    "expenses_options": "Dedicated pass for Expenses and Options. Search SECTION 4 / Fixed Rent / rent schedules / Exhibits / Additional Rent; one Expenses item per lease-year or charge line. Options = renewal/expansion/termination rights.",
+    "expenses": "Dedicated pass for rent and money. Expenses.0 = current term — Start/End dates must align with Current Commencement/Expiration from Pass 1 (see CONFIRMED KEY FACTS). One item per lease-year or charge line WITH a stated dollar amount only. Do not pad future years or narrative charges without amounts. Security deposits and TI allowances go in their own groups, not Expenses.",
+    "area_options": "Extract Area and Options repeatable groups only. One Area item per distinct premises/space row; Options per renewal/expansion/termination option found.",
+    "clauses": "Search ALL operative clauses, general terms, standard terms, rules and regulations, and all annexures. Provide a detailed factual abstraction for each clause field (rights, obligations, notice periods, amounts, conditions) — not a one-line summary. context = verbatim supporting quote. Only use 'Lease is silent.' if the topic is genuinely not addressed ANYWHERE after exhaustive search."
+  },
+  "reference_punt_phrases": [
+    "refer to", "see exhibit", "see schedule", "as per exhibit",
+    "as per schedule", "as per clause", "per clause", "as stated in",
+    "as defined in", "as set out in", "as described in", "as specified in",
+    "subject to clause", "in accordance with clause", "to be confirmed",
+    "to be agreed", "as agreed", "tbd", "t.b.d", "as applicable",
+    "per the agreement", "as per the agreement", "see above", "see below",
+    "as noted", "as mentioned", "per attached", "per attachment"
+  ]
+}

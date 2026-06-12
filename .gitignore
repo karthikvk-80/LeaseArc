@@ -1,0 +1,48 @@
+# ── Secrets & credentials ────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+!.env*.example
+
+# ── Uploaded / extracted lease documents (sensitive client data) ─────────────
+backend/extractions/
+
+# ── Python ────────────────────────────────────────────────────────────────────
+backend/venv/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+.pytest_cache/
+**/.pytest_cache/
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ── Logs & runtime artifacts ──────────────────────────────────────────────────
+*.log
+*.log.*
+backend/logs/
+backend_restart.log
+backend_restart_err.log
+
+# ── Reports / exports ─────────────────────────────────────────────────────────
+backend/token_usage_report.csv
+
+# ── Frontend build output & deps ─────────────────────────────────────────────
+frontend/node_modules/
+frontend/dist/
+frontend/Lease_Intelligence_UI/node_modules/
+frontend/Lease_Intelligence_UI/dist/
+frontend/Lease_Intelligence_UI/dist-ssr/
+
+# ── macOS / OS artifacts ──────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Editor ────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.suo
+*.sw?
