@@ -1,0 +1,1 @@
+"""Standalone lease abstraction POC."""

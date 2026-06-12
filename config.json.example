@@ -1,0 +1,30 @@
+{
+  "api_url": "",
+  "timeout": 120,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "defaults": {
+    "s3_bucket_name": "",
+    "table_index_name": "",
+    "text_index_name": "",
+    "embedding_model": "",
+    "bedrock_model_id": ""
+  },
+  "credentials": {
+    "LLAMA_CLOUD_API_KEY": "",
+    "AWS_BEARER_TOKEN_BEDROCK": "",
+    "OPENAI_BASE_URL": "",
+    "bedrock_model_id": "",
+    "COHERE_API_KEY": "",
+    "DEEPSEEK_API_KEY": "",
+    "GEMINI_API_KEY": "",
+    "AWS_REGION": "",
+    "AWS_ACCESS_KEY_ID": "",
+    "AWS_SECRET_ACCESS_KEY": "",
+    "AWS_SESSION_TOKEN": "",
+    "MISTRAL_API_KEY": "",
+    "MONGODB_DSN": "mongodb://localhost:27017",
+    "MONGODB_DB": "lease"
+  }
+}

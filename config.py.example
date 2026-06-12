@@ -1,0 +1,8 @@
+import os
+
+
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.1-pro-preview")
+REUSE_EXISTING_MARKDOWN = True
+USE_EXPECTED_PROFILER_OUTPUT = True
+EXTRACTOR_MAX_WORKERS = 4
