@@ -11,6 +11,29 @@ from profiler import normalize_s3_pdf_paths, s3_file_name
 
 
 class S3ProfilerTests(unittest.TestCase):
+    def test_page_attribute_schema_uses_bedrock_supported_keywords(self) -> None:
+        present_attributes = profiler.PAGE_ATTRIBUTE_JSON_SCHEMA["properties"][
+            "present_attributes"
+        ]
+
+        self.assertNotIn("uniqueItems", present_attributes)
+
+    def test_page_attribute_normalization_accepts_duplicate_paths(self) -> None:
+        attribute_path = profiler.ATTRIBUTE_CATALOG[0]["full_path"]
+        category = profiler.ATTRIBUTE_CATALOG[0]["category"]
+
+        result = profiler._normalize_page_classification(
+            {
+                "page_number": 99,
+                "present_attributes": [attribute_path, attribute_path],
+            },
+            page_number=1,
+        )
+
+        self.assertIsNotNone(result)
+        self.assertEqual(result["page_number"], 1)
+        self.assertTrue(result[category][attribute_path])
+
     def test_accepts_one_or_multiple_s3_pdf_paths(self) -> None:
         self.assertEqual(
             normalize_s3_pdf_paths("s3://leases/base.pdf"),

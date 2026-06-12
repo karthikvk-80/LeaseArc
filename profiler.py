@@ -1201,7 +1201,6 @@ def _page_attribute_json_schema() -> dict[str, Any]:
                     "type": "string",
                     "enum": [item["full_path"] for item in ATTRIBUTE_CATALOG],
                 },
-                "uniqueItems": True,
             },
         },
         "required": ["page_number", "present_attributes"],
